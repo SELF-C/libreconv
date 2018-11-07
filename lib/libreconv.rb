@@ -27,15 +27,19 @@ module Libreconv
     end
 
     def convert
-      orig_stdout = $stdout.clone
-      $stdout.reopen File.new('/dev/null', 'w')
+      output = []
       Dir.mktmpdir { |target_path|
-        pid = Spoon.spawnp(@soffice_command, "--headless", "--convert-to", @convert_to, @source, "--outdir", target_path)
-        Process.waitpid(pid)
-        $stdout.reopen orig_stdout
+        # Windows compatible
+        if ( RUBY_PLATFORM.downcase =~ /mswin(?!ce)|mingw|cygwin|bccwin/ )
+          output = Open3.capture3(*[File.basename(@soffice_command), "-headless", "-convert-to", @convert_to, @source, "-outdir", target_path])
+        else
+          output = Open3.capture3(*[@soffice_command, "--headless", "--convert-to", @convert_to, @source, "--outdir", target_path])
+        end
         target_tmp_file = "#{target_path}/#{File.basename(@source, ".*")}.#{File.basename(@convert_to, ":*")}"
         FileUtils.cp target_tmp_file, @target
       }
+       
+      output
     end
 
     private
