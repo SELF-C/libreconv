@@ -2,7 +2,7 @@ require "libreconv/version"
 require "uri"
 require "net/http"
 require "tmpdir"
-require "spoon"
+require "open3"
 
 module Libreconv
 
